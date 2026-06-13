@@ -279,13 +279,12 @@ export default function FailureReviewCenter() {
                 marginBottom: 16
               }}>
                 <Timeline
-                  size="small"
                   items={selectedTask.retryRecords.map(r => ({
                     color: r.result === 'failed' ? 'red' : 'blue',
                     children: (
                       <div>
                         <div style={{ fontWeight: 500 }}>
-                          重试 #{r.retryNo} - <Tag color={r.result === 'failed' ? 'error' : 'processing'} size="small">{r.result}</Tag>
+                          重试 #{r.retryNo} - <Tag color={r.result === 'failed' ? 'error' : 'processing'}>{r.result}</Tag>
                         </div>
                         <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
                           节点: {r.node} | {new Date(r.retriedAt).toLocaleString()}

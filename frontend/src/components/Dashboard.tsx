@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Layout, Tabs, Statistic, Row, Col, Card, Tag, Button, Input, Table, Drawer, Descriptions, Space, Progress } from 'antd'
+import { Layout, Tabs, Statistic, Row, Col, Card, Tag, Button, Input, Table, Drawer, Descriptions, Space, Progress, Timeline, Empty } from 'antd'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { useTaskStore } from '../store/tasks'
 import type { Task, TaskStatus } from '../types'
@@ -129,13 +129,66 @@ export default function Dashboard() {
                 <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[store.selectedTask.status]}>{store.selectedTask.status}</Tag></Descriptions.Item>
                 <Descriptions.Item label="执行节点">{store.selectedTask.node}</Descriptions.Item>
                 <Descriptions.Item label="重试次数">{store.selectedTask.retries}/{store.selectedTask.maxRetries}</Descriptions.Item>
+                {store.selectedTask.status === 'failed' && store.selectedTask.failureReason && (
+                  <Descriptions.Item label="失败原因">
+                    <span style={{ color: '#ff4d4f' }}>{store.selectedTask.failureReason}</span>
+                  </Descriptions.Item>
+                )}
                 <Descriptions.Item label="创建时间">{new Date(store.selectedTask.createdAt).toLocaleString()}</Descriptions.Item>
                 <Descriptions.Item label="耗时">{store.selectedTask.duration ? `${(store.selectedTask.duration / 1000).toFixed(1)}s` : '-'}</Descriptions.Item>
               </Descriptions>
+
+              {store.selectedTask.retryRecords && store.selectedTask.retryRecords.length > 0 && (
+                <>
+                  <h4 style={{ marginTop: 16 }}>重试记录</h4>
+                  <div style={{ background: '#1f1f1f', padding: '12px 16px', borderRadius: 8, fontSize: 12 }}>
+                    <Timeline
+                      items={store.selectedTask.retryRecords.map(r => ({
+                        color: r.result === 'failed' ? 'red' : 'blue',
+                        children: (
+                          <div>
+                            <div style={{ fontWeight: 500 }}>
+                              重试 #{r.retryNo} - <Tag color={r.result === 'failed' ? 'error' : 'processing'}>{r.result}</Tag>
+                            </div>
+                            <div style={{ color: '#888', marginTop: 4 }}>
+                              节点: {r.node} | {new Date(r.retriedAt).toLocaleString()}
+                            </div>
+                            {r.errorMessage && (
+                              <div style={{ color: '#ff4d4f', marginTop: 4 }}>
+                                错误: {r.errorMessage}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      }))}
+                    />
+                  </div>
+                </>
+              )}
+
               <h4 style={{ marginTop: 16 }}>执行日志</h4>
               <pre style={{ background: '#1f1f1f', padding: 12, borderRadius: 8, fontSize: 12, maxHeight: 300, overflow: 'auto' }}>
                 {store.selectedTask.logs.join('\n')}
               </pre>
+
+              {store.selectedTask.status === 'failed' && (() => {
+                const review = store.failureReviews.find(r => r.taskId === store.selectedTask?.id)
+                if (review?.conclusion) {
+                  return (
+                    <>
+                      <h4 style={{ marginTop: 16 }}>处理结论</h4>
+                      <div style={{ background: '#1f1f1f', padding: 12, borderRadius: 8, fontSize: 12 }}>
+                        <div style={{ color: '#888', marginBottom: 4 }}>
+                          状态: <Tag color={review.status === 'resolved' ? 'success' : 'warning'}>{review.status}</Tag>
+                          {review.handledBy && ` | 处理人: ${review.handledBy}`}
+                        </div>
+                        <div>{review.conclusion}</div>
+                      </div>
+                    </>
+                  )
+                }
+                return null
+              })()}
             </>
           )}
         </Drawer>
