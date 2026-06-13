@@ -22,6 +22,10 @@ defmodule SchedulerWeb.Router do
     post "/tasks/:id/cancel", TaskController, :cancel
     get "/stats", TaskController, :stats
     get "/nodes", TaskController, :nodes
+    get "/failure-reviews", FailureReviewController, :index
+    get "/failure-reviews/:id", FailureReviewController, :show
+    put "/failure-reviews/:id", FailureReviewController, :update
+    get "/failure-summary", FailureReviewController, :summary
   end
 end
 
@@ -66,6 +70,32 @@ defmodule SchedulerWeb.TaskController do
       }
     end
     json(conn, %{nodes: nodes})
+  end
+end
+
+defmodule SchedulerWeb.FailureReviewController do
+  use Phoenix.Controller, formats: [:json]
+
+  def index(conn, _params) do
+    reviews = Scheduler.TaskManager.list_failure_reviews()
+    json(conn, %{reviews: Enum.map(reviews, &Map.from_struct/1)})
+  end
+
+  def show(conn, %{"id" => id}) do
+    result = Scheduler.TaskManager.get_failure_review(id)
+    review = result.review && Map.from_struct(result.review)
+    retry_records = Enum.map(result.retry_records, &Map.from_struct/1)
+    json(conn, %{review: review, retry_records: retry_records})
+  end
+
+  def update(conn, %{"id" => id} = params) do
+    updated = Scheduler.TaskManager.update_failure_review(id, params)
+    json(conn, %{review: Map.from_struct(updated)})
+  end
+
+  def summary(conn, _params) do
+    summary = Scheduler.TaskManager.get_failure_summary()
+    json(conn, summary)
   end
 end
 

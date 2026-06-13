@@ -3,6 +3,7 @@ import { Layout, Tabs, Statistic, Row, Col, Card, Tag, Button, Input, Table, Dra
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { useTaskStore } from '../store/tasks'
 import type { Task, TaskStatus } from '../types'
+import FailureReviewCenter from './FailureReviewCenter'
 
 const { Header, Content } = Layout
 
@@ -115,6 +116,7 @@ export default function Dashboard() {
               ))}
             </Row>
           )},
+          { key: 'failure-review', label: '失败复盘中心', children: <FailureReviewCenter /> },
         ]} />
 
         {/* Task Detail Drawer */}
